@@ -1,69 +1,91 @@
-const expenseTable = document.getElementById('expense-table');
-const submitButton = document.getElementById('submit-expense-button')
-const deleteButton = createDeleteButton();
-const form = document.getElementById('expense-input')
+const submitButton = document.getElementById('submit-expense-button');
 
-function addDate() {
-    const dateInput = document.getElementById('date-input');
-    const dateCell = dateInput.value;
-    return dateCell;
-}
+submitButton.addEventListener('click', (e) => {
+  e.preventDefault();
+  const dateInput = document.getElementById('date-input');
+  const priceInput = document.getElementById('expense-amount');
+  const expenseDescription = document.getElementById('expense-description');
+  const purchaseLocation = document.getElementById('purchase-location');
+  const paymentMethod = document.getElementById('payment-method');
 
-function addPrice() {
-    const priceInput = document.getElementById('expense-amount');
-    const priceCell = priceInput.value;
-    return priceCell;
-}
+  if (
+    !dateInput.value ||
+    !priceInput.value ||
+    !expenseDescription.value ||
+    !purchaseLocation.value
+  ) {
+    alert('Please fill out all input fields before submitting.');
+    return;
+  }
 
-function addExpenseDescription() {
-    const expenseDescription = document.getElementById('expense-description');
-    const expenseCell = expenseDescription.value;
-    return expenseCell;
-}
+  const expenseItem = {
+    id: Date.now(),
+    date: dateInput.value,
+    price: priceInput.value,
+    description: expenseDescription.value,
+    location: purchaseLocation.value,
+    paymentMethod: paymentMethod.value
+  };
 
-function addPurchaseLocation() {
-    const purchaseLocation = document.getElementById('purchase-location');
-    const purchaseLocationCell = purchaseLocation.value;
-    return purchaseLocationCell;
-}
+  renderExpenseRow(expenseItem);
+  const expenseArray = getExpenses();
+  expenseArray.push(expenseItem);
+  saveExpenses(expenseArray);
 
-function addPaymentMethod() {
-    const paymentMethod = document.getElementById('payment-method');
-    const paymentMethodCell = paymentMethod.value;
-    return paymentMethodCell;
-}
-
-submitButton.addEventListener('click', function addExpense(e) {        
-    e.preventDefault();
-    const newRow = expenseTable.insertRow(-1);
-    const deleteButton = createDeleteButton(newRow);
-    const cell1 = newRow.insertCell(0);
-    const cell2 = newRow.insertCell(1);
-    const cell3 = newRow.insertCell(2);
-    const cell4 = newRow.insertCell(3);
-    const cell5 = newRow.insertCell(4);
-    
-    
-    cell1.textContent = addDate();
-    cell2.textContent = addPrice();
-    cell3.textContent = addExpenseDescription();
-    cell4.textContent = addPurchaseLocation();
-    cell5.textContent = addPaymentMethod();
-    
-
-    
-    
-    newRow.appendChild(deleteButton);
-    deleteButton.addEventListener('click', (e) => {
-        newRow.remove();
-    });
-    
-
+  document.getElementById('expense-input-form').reset();
 });
 
-function createDeleteButton(newRow) {
-    const deleteButton = document.createElement('button');
-    deleteButton.textContent = "Delete expense";
-    return deleteButton;
+function renderExpenseRow(expense) {
+  const expenseTable = document.getElementById('expense-table');
+  const newRow = expenseTable.insertRow(-1);
+  const cell1 = newRow.insertCell(0);
+  const cell2 = newRow.insertCell(1);
+  const cell3 = newRow.insertCell(2);
+  const cell4 = newRow.insertCell(3);
+  const cell5 = newRow.insertCell(4);
+
+  cell1.textContent = expense.date;
+  cell2.textContent = '$' + expense.price;
+  cell3.textContent = expense.description;
+  cell4.textContent = expense.location;
+  cell5.textContent = expense.paymentMethod;
+  const deleteButton = createDeleteButton();
+
+  newRow.appendChild(deleteButton);
+  deleteButton.addEventListener('click', (e) => {
+    deleteExpense(newRow, expense.id);
+  });
 }
-  
+
+function deleteExpense(targetRow, id) {
+  targetRow.remove();
+  const expenseArray = getExpenses();
+  for (let i = 0; i < expenseArray.length; i++) {
+    if (expenseArray[i].id === id) {
+      expenseArray.splice(i, 1);
+      saveExpenses(expenseArray);
+    }
+  }
+}
+
+function getExpenses() {
+  return JSON.parse(localStorage.getItem('expenseArray')) || [];
+}
+
+function saveExpenses(array) {
+  localStorage.setItem('expenseArray', JSON.stringify(array));
+}
+
+function createDeleteButton(newRow) {
+  const deleteButton = document.createElement('button');
+  deleteButton.setAttribute('id', 'deleteButton');
+  deleteButton.textContent = 'Delete expense';
+  return deleteButton;
+}
+
+window.addEventListener('load', () => {
+  const expenseArray = getExpenses();
+  expenseArray.forEach((expense) => {
+    renderExpenseRow(expense);
+  });
+});
